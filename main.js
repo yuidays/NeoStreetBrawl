@@ -1,91 +1,43 @@
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+let currentBgm = null;
 
-let gameRunning = false;
-
-const player = {
-  x: 100,
-  y: 400,
-  width: 40,
-  height: 40,
-  color: "#0ff",
-  speed: 5,
-  dx: 0,
-  dy: 0,
-  health: 100
-};
-
-const enemy = {
-  x: 700,
-  y: 400,
-  width: 40,
-  height: 40,
-  color: "red",
-  health: 100
-};
-
-function drawRect(obj) {
-  ctx.fillStyle = obj.color;
-  ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+// 🔊 BGM 재생 함수
+function playBgm(src) {
+  if (currentBgm) {
+    currentBgm.pause();       // 기존 BGM 일시정지
+    currentBgm.currentTime = 0; // 재생 위치 초기화
+  }
+  currentBgm = new Audio(src); // 새 오디오 객체 생성
+  currentBgm.loop = true;      // 반복 재생 설정
+  currentBgm.volume = 0.5;     // 볼륨 설정 (0~1)
+  currentBgm.play();           // BGM 재생
 }
 
-function clear() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-}
+// 🎮 게임 시작 시 호출되는 함수
+function startGame() {
+  // 스타트 화면 숨기기
+  document.getElementById("start-screen").style.display = "none";
 
-function update() {
-  if (!gameRunning) return;
+  // 게임 캔버스 초기화
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d");
 
-  clear();
+  // 🎵 일반 전투 BGM 재생
+  playBgm("assets/audio/cyberpunk-305315.mp3");
 
-  player.x += player.dx;
-  player.y += player.dy;
+  // 👾 간단한 애니메이션 예시
+  let x = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "cyan";
+    ctx.fillRect(x, 100, 50, 50);
+    x += 2;
 
-  // keep player in bounds
-  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
-  player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
-
-  drawRect(player);
-  drawRect(enemy);
-
-  // collision
-  if (
-    player.x < enemy.x + enemy.width &&
-    player.x + player.width > enemy.x &&
-    player.y < enemy.y + enemy.height &&
-    player.y + player.height > enemy.y
-  ) {
-    enemy.health -= 1;
-    if (enemy.health <= 0) {
-      alert("YOU WIN!");
-      gameRunning = false;
+    if (x < canvas.width) {
+      requestAnimationFrame(draw); // 다음 프레임 요청
+    } else {
+      endGame(); // 끝에 도달하면 게임 종료 처리
     }
   }
 
-  requestAnimationFrame(update);
+  draw(); // 애니메이션 시작
 }
-
-function startGame() {
-  document.getElementById("start-screen").style.display = "none";
-  gameRunning = true;
-  update();
-}
-
-document.addEventListener("keydown", (e) => {
-  if (e.key === "ArrowRight") player.dx = player.speed;
-  if (e.key === "ArrowLeft") player.dx = -player.speed;
-  if (e.key === "ArrowUp") player.dy = -player.speed;
-  if (e.key === "ArrowDown") player.dy = player.speed;
-});
-
-document.addEventListener("keyup", (e) => {
-  if (
-    e.key === "ArrowRight" ||
-    e.key === "ArrowLeft" ||
-    e.key === "ArrowUp" ||
-    e.key === "ArrowDown"
-  ) {
-    player.dx = 0;
-    player.dy = 0;
-  }
-});
